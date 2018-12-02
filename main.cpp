@@ -1,3 +1,23 @@
+// ============================================================================
+// XAudio2 Sandbox
+// 
+// XAudio2 is an audio API for all kinds of games. It is a successor to older
+// DirectSound and XAudio and has a support for signal processing and mixing.
+//
+// The core object in XAudio2 is the IXAudio2 interface, which is used to build
+// all other XAudio2 related objects. It is created with XAudio2Create method.
+//
+// XAudio2 contains contains the following kinds of voices.
+//   1. source......Handle audio data provided by the client.
+//   2. submix......Handle mixing of the voices.
+//   3. mastering...Handle passing voice data to audio device.
+//
+// All XAudio2 voices contain the following features.
+//   1. Overall volume
+//   2. Channel specific volume
+//   3. DSP effects
+//   4. Mix matrices
+// ============================================================================
 #include <cassert>
 #include <iostream>
 #include <comdef.h>
@@ -195,6 +215,46 @@ AudioFile loadFile(const std::wstring& file, ComPtr<IMFAttributes> config)
 }
 
 // ============================================================================
+// XAudio2 - Create a new source voice.
+// Source voices act as a containers of audio data that can be provided by the
+// application using the XAudio2 API.
+// ============================================================================
+IXAudio2SourceVoice* createVoice(ComPtr<IXAudio2> xa2, AudioFile& file)
+{
+  assert(xa2);
+  assert(file.format);
+
+  // create a new source voice with a desired sound format.
+  IXAudio2SourceVoice* sourceVoice = nullptr;
+  throwOnFail(xa2->CreateSourceVoice(&sourceVoice, file.format));
+
+  // return the created source voice.
+  return sourceVoice;
+}
+
+// ============================================================================
+// XAudio2 - Play a source voice.
+// First fills the source voice buffer with the audio data from the read audio
+// file and then start playing the actual sound by sending it to audio queue.
+// ============================================================================
+void playVoice(IXAudio2SourceVoice* voice, AudioFile& file)
+{
+  assert(voice);
+  assert(!file.data.empty());
+
+  // fill a buffer descriptor with the file details.
+  XAUDIO2_BUFFER buffer = {};
+  buffer.AudioBytes = file.data.size();
+  buffer.pAudioData = &file.data[0];
+
+  // submit audio buffer into the source voice.
+  throwOnFail(voice->SubmitSourceBuffer(&buffer));
+
+  // it's time start playing the voice.
+  voice->Start();
+}
+
+// ============================================================================
 
 int main()
 {
@@ -205,6 +265,12 @@ int main()
   // initialize XAudio2.
   auto xaudio2 = initXAudio2();
   auto masteringVoice = createMasteringVoice(xaudio2);
+  auto sourceVoice = createVoice(xaudio2, audioFile);
+
+  // play the loaded sounds.
+  playVoice(sourceVoice, audioFile);
+
+  Sleep(7000);
 
   // stop and and remove the mastering voice from the XAudio2 graph.
   masteringVoice->DestroyVoice();
