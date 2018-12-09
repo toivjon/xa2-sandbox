@@ -7,6 +7,8 @@
 // The core object in XAudio2 is the IXAudio2 interface, which is used to build
 // all other XAudio2 related objects. It is created with XAudio2Create method.
 //
+// ### Voice Types ###
+//
 // XAudio2 contains contains the following kinds of voices.
 //   1. source......Handle audio data provided by the client.
 //   2. submix......Handle mixing of the voices.
@@ -17,6 +19,30 @@
 //   2. Channel specific volume
 //   3. DSP effects
 //   4. Mix matrices
+//
+// ### Audio Callbacks ###
+//
+// Audio callbacks can be used to call functions when certain events take place
+// in the audio processing thread. Callbacks are divided into two interfaces.
+//   1. IXAudio2EngineCallback which handles global audio events.
+//      OnProcessingPassEnd()............After audio processing pass end.
+//      OnProcessingPassStart()..........Before audio processing pass begin.
+//      OnCriticalError(HRESULT error)...On a critical error.
+//   2. IXAudio2VoiceCallback which handles voice specific audio events.
+//      OnStreamEnd()................................Stream finished.
+//      OnVoiceProcessingPassEnd()...................After voice pass.
+//      OnVoiceProcessingPassStart(UINT32 samples)...Before void pass.
+//      OnBufferEnd(void* bufferCtx).................After a buffer.
+//      OnBufferStart(void* bufferCtx)...............Before a new buffer.
+//      OnLoopEnd(void* bufferCtx)...................When reaching end-of-loop.
+//      OnVoiceError(void* bufferCtx, HRESULT err)...On a critical error.
+//
+// Callback functions must be implemented carefully and without delays like...
+//   1. Don't access hard disk or other permanent storage.
+//   2. Don't make expensive or blocking API calls.
+//   3. Don't synchronize with other parts of the code.
+//   4. Don't require significant CPU usage.
+// Whether these are required, just provide task to other thread to do the job.
 // ============================================================================
 #include <cassert>
 #include <iostream>
