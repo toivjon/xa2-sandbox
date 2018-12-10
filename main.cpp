@@ -43,6 +43,38 @@
 //   3. Don't synchronize with other parts of the code.
 //   4. Don't require significant CPU usage.
 // Whether these are required, just provide task to other thread to do the job.
+//
+// ### Audio Graphs ###
+// 
+// Audio graphs are chains that work in the following kind of sequence:
+//   1. Receive audio streams as input.
+//   2. Process the provided streams.
+//   3. Output the output to an audio device.
+//
+// All audio graph processing takes place in a separate thread with where the
+// periodicity is defined by the graph's quantum (e.g. 10ms on Windows).
+//
+// Audio graphs can be dynamically controlled, by enabling/disabling parts of
+// the graph and changing effects and interconnections even while it's running.
+// Here's an abstract list of graph operations that will change it's state.
+//   1. Create/destroy voices.
+//   2. Start/stop voices.
+//   3. Change the voice destination.
+//   4. Modify effect chain.
+//   5. Enable/disable effects.
+//   6. Specify effect parameters or SRCs, filters, volumes and mixers.
+// 
+// Any graph state changing operations can be combined as an atomic operation
+// by using the operation sets (which are discussed in more detail later on).
+//
+// Note that XAudio2 stores and processes audio always as a 32-bit float PCM.
+// If any supported encoded data is given to XAudio2 it will be first decoded.
+//
+// XAudio2 handles all sample rate and channel conversion with following limits.
+//   1. Destination voices must be running at same sample rate.
+//   2. Effects can change channel count but NOT sample rate.
+//   3. Effect channel count must match with the voices.
+//   4. No dynamic graph change can made which breaks the above rules.
 // ============================================================================
 #include <cassert>
 #include <iostream>
