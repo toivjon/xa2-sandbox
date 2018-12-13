@@ -75,6 +75,36 @@
 //   2. Effects can change channel count but NOT sample rate.
 //   3. Effect channel count must match with the voices.
 //   4. No dynamic graph change can made which breaks the above rules.
+//
+// ### Audio Effects ###
+//
+// XAudio contains an inbuilt support for the following audio effects (XAPO).
+//   reverb.........Created with XAudio2CreateReverb
+//   volume-meter...Created with XAudio2CreateVolumeMeter
+//
+// Each new effect must also have a populated XAUDIO2_EFFECT_DESCRIPTOR. This
+// struct contains the following kind of attributes.
+//   IUnknown* effect........Pointer to effect object (XAPO).
+//   BOOL initialState.......True whether to initially enable the effect.
+//   UINT32 outputChannels...Number of output channels.
+//
+// Effects are passed to voices as effect chains. To build an effect chain, one
+// should use the XAUDIO2_EFFECT_CHAIN structure to specify it's contents.
+//   UINT32 effectCount............................The number of effects.
+//   XAUDIO_EFFECT_DESCRIPTOR* effectDescriptors...The array of effects.
+// This structure is then passed to voice->SetEffectChain(&chain) to apply it.
+// 
+// NOTE: XAPO objects can be released after being assigned to give ownership to
+//       XAudio2. This ensures that XAudio releases them when no longer needed.
+//
+// Here's a list of other useful effect management functions.
+//   voice->SetEffectParameters(...)...To specify effect behavior.
+//   voice->DisableEffect(...).........To disable effect from the voice.
+//   voice->EnableEffect(...)..........To enable effect on the voice.
+//
+// Custom audio processing objects (XAPOs) can be created with CXAPOBase and
+// IXAPO interface. XAPOFX can be used for some common mechanisms to create
+// new effect instances.
 // ============================================================================
 #include <cassert>
 #include <iostream>
